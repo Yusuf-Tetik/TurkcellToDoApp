@@ -44,7 +44,7 @@ export default function TodoForm({ editingTodo, onCreate, onUpdate, onCancelEdit
         <input
           id="title"
           type="text"
-          placeholder="Örn: Alışveriş yap"
+          placeholder="Örn: Turkcell'de işe gir"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           required
