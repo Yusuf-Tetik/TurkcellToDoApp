@@ -10,6 +10,19 @@ export default function TodoItem({ todo, onEdit, onToggleStatus, onDelete }) {
     normalizedStatus === 'COMPLETED'
   )
 
+  const priority = String(todo.priority || 'LOW').toUpperCase()
+  let deadlineText = '-'
+  try {
+    if (todo.deadline) {
+      const d = new Date(todo.deadline)
+      if (isFinite(d)) {
+        deadlineText = d.toLocaleString()
+      }
+    }
+  } catch { /* ignore */ }
+
+  const tags = Array.isArray(todo.tag) ? todo.tag.join(', ') : '-'
+
   return (
     <tr>
       <td>{todo.title}</td>
@@ -19,6 +32,9 @@ export default function TodoItem({ todo, onEdit, onToggleStatus, onDelete }) {
           {isCompleted ? 'Done' : 'Not Done'}
         </span>
       </td>
+      <td>{priority}</td>
+      <td className="muted">{deadlineText}</td>
+      <td className="muted">{tags}</td>
       <td className="actions">
         <button className="btn btn-secondary" onClick={() => onEdit(todo)}>
           Düzenle

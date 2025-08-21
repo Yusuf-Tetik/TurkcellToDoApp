@@ -16,6 +16,9 @@ export default function TodoList({ todos, onEdit, onToggleStatus, onDelete }) {
             <th>Başlık</th>
             <th>Açıklama</th>
             <th>Durum</th>
+            <th>Öncelik</th>
+            <th>Son Tarih</th>
+            <th>Etiketler</th>
             <th>Aksiyonlar</th>
           </tr>
         </thead>
