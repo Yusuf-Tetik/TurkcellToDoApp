@@ -18,7 +18,14 @@ export const getTemperature = async (location) => {
     return response.data
   } catch (err) {
     console.error('Hava durumu alınamadı', err)
-    throw err
+    // Alternatif: path param denemesi
+    try {
+      const response2 = await api.get(`/weather/${encodeURIComponent(location)}`)
+      return response2.data
+    } catch (err2) {
+      console.error('Hava durumu path denemesi de başarısız', err2)
+      throw err2
+    }
   }
 }
 

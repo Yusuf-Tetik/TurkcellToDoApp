@@ -2,7 +2,13 @@
 // Güncelle, durum değiştir ve sil işlemleri için butonlar içerir
 export default function TodoItem({ todo, onEdit, onToggleStatus, onDelete }) {
   // JSX: Tablo satırı olarak todo bilgilerini gösteriyoruz
-  const isCompleted = Boolean(todo.completed || todo.status === 'COMPLETED' || todo.done)
+  const normalizedStatus = String(todo.status || '').toUpperCase()
+  const isCompleted = Boolean(
+    todo.completed ||
+    todo.done ||
+    normalizedStatus === 'DONE' ||
+    normalizedStatus === 'COMPLETED'
+  )
 
   return (
     <tr>
@@ -10,7 +16,7 @@ export default function TodoItem({ todo, onEdit, onToggleStatus, onDelete }) {
       <td className="muted">{todo.description}</td>
       <td>
         <span className={isCompleted ? 'badge badge-success' : 'badge badge-warning'}>
-          {isCompleted ? 'Tamamlandı' : 'Bekliyor'}
+          {isCompleted ? 'Done' : 'Not Done'}
         </span>
       </td>
       <td className="actions">

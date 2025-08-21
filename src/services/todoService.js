@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { authStorage } from './authService'
 
 // Axios örneği: Backend'in base URL'i
 const api = axios.create({
@@ -29,7 +30,22 @@ api.interceptors.response.use(
 // Tüm todoları getirir
 export const getAllTodos = async () => {
   // Backend'den tüm todoları çekiyoruz
-  const response = await api.get('/all-todos')
+  // Kullanıcıya özel liste: GET /api/users/{userId}/todos
+  const currentUser = authStorage.get()
+  const userId = currentUser?.id
+  const path = userId ? `/users/${userId}/todos` : '/all-todos'
+  const response = await api.get(path)
+  return response.data
+}
+
+// Filtreli todoları getirir
+export const filterTodos = async ({ status, priority, start, end }) => {
+  const params = {}
+  if (status) params.status = status
+  if (priority) params.priority = priority
+  if (start) params.start = start
+  if (end) params.end = end
+  const response = await api.get('/filter-todos', { params })
   return response.data
 }
 
@@ -42,29 +58,50 @@ export const getTodoById = async (id) => {
 
 // Yeni todo oluşturur
 export const createTodo = async (payload) => {
-  // Backend'e yeni todo verisini gönderiyoruz
-  // Birçok Spring Boot DTO'su yalnızca title & description bekler.
-  // completed gibi ekstra alanlar 400 (UnrecognizedProperty) hatasına sebep olabilir.
-  const { title, description, completed } = payload || {}
-  const body = { title, description }
-  // Eğer kullanıcı tamamlandı seçtiyse completed alanını gönderelim (opsiyonel)
-  if (typeof completed === 'boolean') {
-    body.completed = completed
+  // Swagger: title, description, status, priority, deadline, tag[]
+  const { title, description, status, priority, deadline, tag } = payload || {}
+  const trimmedTitle = (title || '').trim()
+  const trimmedDescription = (description || '').trim()
+  if (!trimmedTitle) throw new Error('Başlık boş olamaz')
+
+  const currentUser = authStorage.get()
+  const userId = currentUser?.id
+  if (!userId) throw new Error('Todo oluşturmak için önce giriş yapmalısınız.')
+
+  const body = {
+    title: trimmedTitle,
+    description: trimmedDescription || trimmedTitle,
+    status: status || 'NOT_DONE',
+    priority: priority || 'LOW',
+    deadline: deadline || new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+    tag: Array.isArray(tag) ? tag : [],
   }
-  const response = await api.post('/create-todo', body)
+
+  const response = await api.post(`/users/${userId}/create-todo`, body)
   return response.data
 }
 
 // Var olan todo'yu günceller
 export const updateTodo = async (id, payload) => {
-  // Backend'e güncellenmiş todo verisini gönderiyoruz
-  const response = await api.put(`/update-todo/${id}`, payload)
+  // Backend'e güncellenmiş todo verisini gönderiyoruz (tüm alanları gönder)
+  const { title, description, status, priority, deadline, tag, completed } = payload || {}
+  const body = {
+    title,
+    description,
+    status,
+    priority,
+    deadline,
+    tag,
+  }
+  if (typeof completed === 'boolean') body.completed = completed
+  const response = await api.put(`/update-todo/${id}`, body)
   return response.data
 }
 
 // Todo'nun durumunu değiştirir (tamamlandı/bekliyor)
 export const toggleTodoStatus = async (id) => {
   // Backend'de status toggle işlemi yapılıyor
+  // Swagger: PATCH /api/change-todo-status/{id} (gövdesiz)
   const response = await api.patch(`/change-todo-status/${id}`)
   return response.data
 }
@@ -78,6 +115,7 @@ export const deleteTodo = async (id) => {
 
 export default {
   getAllTodos,
+  filterTodos,
   getTodoById,
   createTodo,
   updateTodo,

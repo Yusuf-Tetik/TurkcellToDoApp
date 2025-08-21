@@ -6,6 +6,10 @@ export default function TodoForm({ editingTodo, onCreate, onUpdate, onCancelEdit
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [completed, setCompleted] = useState(false)
+  const [status, setStatus] = useState('NOT_DONE')
+  const [priority, setPriority] = useState('LOW')
+  const [deadline, setDeadline] = useState('') // datetime-local format
+  const [tags, setTags] = useState('') // virgül (,) ile ayrılmış etiketler
 
   // editingTodo değiştiğinde formu dolduruyoruz
   useEffect(() => {
@@ -14,25 +18,66 @@ export default function TodoForm({ editingTodo, onCreate, onUpdate, onCancelEdit
       setTitle(editingTodo.title || '')
       setDescription(editingTodo.description || '')
       setCompleted(Boolean(editingTodo.completed || editingTodo.status === 'COMPLETED' || editingTodo.done))
+      setStatus(String(editingTodo.status || '').toUpperCase() || 'NOT_DONE')
+      setPriority(String(editingTodo.priority || 'LOW').toUpperCase())
+      // deadline ISO ise datetime-local' a çevir (YYYY-MM-DDTHH:mm)
+      try {
+        if (editingTodo.deadline) {
+          const d = new Date(editingTodo.deadline)
+          if (isFinite(d)) {
+            const iso = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0,16)
+            setDeadline(iso)
+          } else {
+            setDeadline('')
+          }
+        } else {
+          setDeadline('')
+        }
+      } catch { setDeadline('') }
+      const existingTags = Array.isArray(editingTodo.tag) ? editingTodo.tag.join(', ') : ''
+      setTags(existingTags)
     } else {
       // Yeni kayıt için formu temizle
       setTitle('')
       setDescription('')
       setCompleted(false)
+      setStatus('NOT_DONE')
+      setPriority('LOW')
+      setDeadline('')
+      setTags('')
     }
   }, [editingTodo])
 
   // Form submit işlemi: yeni ekleme veya güncelleme yapar
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     // Yeni oluşturma için çoğu backend sadece title & description bekler
-    const payload = editingTodo ? { title, description, completed } : { title, description }
+    const isoDeadline = deadline ? new Date(deadline).toISOString() : undefined
+    const tagArray = tags
+      .split(',')
+      .map((t) => t.trim())
+      .filter((t) => t.length > 0)
+
+    const base = { title, description, status, priority, deadline: isoDeadline, tag: tagArray }
 
     // Düzenleme modunda ise güncelleme, değilse ekleme
     if (editingTodo) {
+      const payload = { ...base }
+      // completed alanı eski backendlerle uyum için tutuluyor, ama göndermek zorunlu değil
+      if (typeof completed === 'boolean') payload.completed = completed
       onUpdate(editingTodo.id, payload)
     } else {
-      onCreate(payload)
+      const ok = await onCreate(base)
+      if (ok) {
+        // formu resetle
+        setTitle('')
+        setDescription('')
+        setCompleted(false)
+        setStatus('NOT_DONE')
+        setPriority('LOW')
+        setDeadline('')
+        setTags('')
+      }
     }
   }
 
@@ -60,20 +105,65 @@ export default function TodoForm({ editingTodo, onCreate, onUpdate, onCancelEdit
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={3}
+          required
+        />
+      </div>
+
+      {/* Durum ve Öncelik */}
+      <div className="form-group inline">
+        <div className="form-group" style={{ flex: 1 }}>
+          <label htmlFor="status">Durum</label>
+          <select id="status" value={status} onChange={(e) => setStatus(e.target.value)}>
+            <option value="NOT_DONE">Not Done</option>
+            <option value="DONE">Done</option>
+          </select>
+        </div>
+        <div className="form-group" style={{ flex: 1 }}>
+          <label htmlFor="priority">Öncelik</label>
+          <select id="priority" value={priority} onChange={(e) => setPriority(e.target.value)}>
+            <option value="LOW">Low</option>
+            <option value="MEDIUM">Medium</option>
+            <option value="HIGH">High</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Son tarih */}
+      <div className="form-group">
+        <label htmlFor="deadline">Son Tarih</label>
+        <input
+          id="deadline"
+          type="datetime-local"
+          value={deadline}
+          onChange={(e) => setDeadline(e.target.value)}
+        />
+      </div>
+
+      {/* Etiketler */}
+      <div className="form-group">
+        <label htmlFor="tags">Etiketler (virgül ile ayırın)</label>
+        <input
+          id="tags"
+          type="text"
+          placeholder="ör: iş, önemli"
+          value={tags}
+          onChange={(e) => setTags(e.target.value)}
         />
       </div>
 
       {/* Tamamlandı checkbox (güncellemede faydalı) */}
-      <div className="form-group inline">
-        <label className="checkbox">
-          <input
-            type="checkbox"
-            checked={completed}
-            onChange={(e) => setCompleted(e.target.checked)}
-          />
-          <span>Tamamlandı</span>
-        </label>
-      </div>
+      {false && (
+        <div className="form-group inline">
+          <label className="checkbox">
+            <input
+              type="checkbox"
+              checked={completed}
+              onChange={(e) => setCompleted(e.target.checked)}
+            />
+            <span>Tamamlandı</span>
+          </label>
+        </div>
+      )}
 
       {/* Form butonları */}
       <div className="form-actions">

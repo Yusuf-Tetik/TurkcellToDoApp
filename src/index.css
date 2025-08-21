@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root {
   /* Turkcell renk paleti */
   --color-primary: #FFD700; /* Sarı */
@@ -134,11 +138,13 @@ body {
 }
 .table tbody tr { background: #fff; box-shadow: 0 6px 16px rgba(0,0,0,0.06); }
 .table tbody td { padding: 12px 10px; vertical-align: top; }
-.table tbody td.actions { white-space: nowrap; text-align: right; }
+.table tbody td.actions { white-space: nowrap; text-align: left; display: flex; gap: 8px; align-items: center; }
+.table tbody td.actions > .btn { margin-left: 8px; }
+.table tbody td.actions > .btn:first-child { margin-left: 0; }
 
-.badge { padding: 6px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; }
-.badge-success { background: #dcfce7; color: #166534; }
-.badge-warning { background: #fef9c3; color: #854d0e; }
+.badge { padding: 6px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; border: 1px solid transparent; display: inline-flex; align-items: center; justify-content: center; text-align: center; line-height: 1.2; min-width: 64px; min-height: 40px; }
+.badge-success { background: #eafaf0; color: #166534; border-color: #bbf7d0; }
+.badge-warning { background: #eff6ff; color: #003366; border-color: #dbeafe; }
 
 .muted { color: var(--color-muted); }
 
@@ -149,3 +155,10 @@ body {
   padding: 12px;
   color: var(--color-muted);
 }
+
+.user-menu { position: relative; }
+.user-menu-button { border-radius: 12px; padding: 10px 14px; font-weight: 700; background: #003366; color: #fff; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 6px 16px rgba(0,0,0,0.15); }
+.user-menu-button:hover { box-shadow: 0 8px 18px rgba(0,0,0,0.2); }
+.user-menu-card { position: absolute; right: 0; top: 100%; margin-top: 8px; padding: 12px; border-radius: 16px; background: #fff; box-shadow: 0 12px 28px rgba(0,0,0,0.12); min-width: 240px; }
+.user-menu-actions { display: flex; gap: 10px; }
+.user-menu-actions .btn { flex: 1; border-radius: 12px; }
