@@ -7,9 +7,10 @@ const api = axios.create({
 })
 
 export async function registerUser(payload) {
-  // payload: { name, email, password }
+  // payload: { name, username, email, password }
   const body = {
     name: (payload?.name || '').trim(),
+    username: (payload?.username || '').trim(),
     email: (payload?.email || '').trim(),
     password: payload?.password || '',
   }

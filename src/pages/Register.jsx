@@ -19,10 +19,11 @@ export default function Register() {
   const validate = () => {
     const next = {}
     if (!form.name) next.name = 'Ad zorunludur'
+    else if (form.name.trim().length < 3) next.name = 'Ad en az 3 karakter olmalı'
     if (!form.email) next.email = 'E-posta zorunludur'
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) next.email = 'Geçerli bir e-posta girin'
     if (!form.password) next.password = 'Şifre zorunludur'
-    else if (form.password.length < 6) next.password = 'Şifre en az 6 karakter olmalı'
+    else if (form.password.length < 3) next.password = 'Şifre en az 3 karakter olmalı'
     setErrors(next)
     return Object.keys(next).length === 0
   }
@@ -33,11 +34,29 @@ export default function Register() {
     try {
       setLoading(true)
       setNotice({})
-      await registerUser(form)
+      // username otomatik üret (email > ad slug > fallback)
+      const local = (form.email || '').split('@')[0] || ''
+      const nameSlug = (form.name || '').trim().toLowerCase().replace(/\s+/g, '.')
+      const base = (local || nameSlug || 'user').replace(/[^a-zA-Z0-9._-]/g, '')
+      let username = base.slice(0, 24)
+      if (username.length < 3) username = `${username}${Math.random().toString(36).slice(2, 5)}`
+      await registerUser({ ...form, username })
+      // Kayıt edilen adı ve e-postayı geçici olarak sakla; backend isim dönmezse profil için kullanacağız
+      try {
+        localStorage.setItem('last_register_name', (form.name || '').trim())
+        localStorage.setItem('last_register_email', (form.email || '').trim())
+      } catch {}
       setNotice({ type: 'success', message: 'Kayıt başarılı. Giriş sayfasına yönlendiriliyorsunuz...' })
       setTimeout(() => navigate('/login'), 800)
     } catch (err) {
-      const msg = err?.response?.data?.message || err?.response?.data?.error || 'Kayıt başarısız'
+      // Sunucudan dönen hata içeriğini kullanıcıya yansıt
+      const data = err?.response?.data
+      let msg = data?.message || data?.error || 'Kayıt başarısız'
+      // Bazı Spring hatalarında constraint ihlalleri liste olarak dönebilir
+      if (Array.isArray(data?.violations)) {
+        const details = data.violations.map(v => `${v?.field || ''} ${v?.message || ''}`.trim()).filter(Boolean).join(' | ')
+        if (details) msg = `${msg}: ${details}`
+      }
       setNotice({ type: 'error', message: msg })
     } finally {
       setLoading(false)
@@ -70,6 +89,7 @@ export default function Register() {
             error={errors.name}
             autoComplete="name"
           />
+          {/* Kullanıcı adı otomatik üretilecek; alanı göstermiyoruz */}
           <Input
             label="E-posta"
             name="email"
@@ -90,7 +110,7 @@ export default function Register() {
             type="password"
             value={form.password}
             onChange={handleChange}
-            placeholder="En az 6 karakter"
+            placeholder="En az 3 karakter"
             error={errors.password}
             autoComplete="new-password"
           />

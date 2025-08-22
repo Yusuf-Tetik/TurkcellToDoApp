@@ -32,7 +32,16 @@ export default function Login() {
       setLoading(true)
       setNotice({})
       const user = await loginUser({ email: form.email, password: form.password })
-      authStorage.set(user)
+      // Profil adını eğer backend boş döndürürse kayıt sırasında girilen ad ile doldur
+      let resolved = user
+      try {
+        const lastEmail = localStorage.getItem('last_register_email')
+        const lastName = localStorage.getItem('last_register_name')
+        if ((!resolved?.name || String(resolved.name).trim().length === 0) && lastEmail && lastName && lastEmail === form.email) {
+          resolved = { ...user, name: lastName }
+        }
+      } catch {}
+      authStorage.set(resolved)
       setNotice({ type: 'success', message: 'Giriş başarılı. Yönlendiriliyorsunuz...' })
       setTimeout(() => navigate('/todos'), 600)
     } catch (err) {

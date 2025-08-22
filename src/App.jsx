@@ -22,6 +22,7 @@ export default function App() {
   const [editingTodo, setEditingTodo] = useState(null) // Düzenlenen todo
   const [menuOpen, setMenuOpen] = useState(false) // Kullanıcı menüsü
   const [filters, setFilters] = useState({ status: '', priority: '', start: '', end: '' })
+  const [listResetKey, setListResetKey] = useState(0) // Listeyi sıfırlamak için anahtar
   const navigate = useNavigate()
 
   // Component yüklendiğinde todoları çek
@@ -33,7 +34,11 @@ export default function App() {
   // Filtreler değiştiğinde otomatik uygula (sadece mevcut kullanıcının todoları üzerinde)
   useEffect(() => {
     const hasAny = filters.status || filters.priority || filters.start || filters.end
-    if (!hasAny) return
+    if (!hasAny) {
+      // Filtreler tamamen temizlendiyse tüm todoları geri yükle
+      fetchTodos()
+      return
+    }
     ;(async () => {
       try {
         setLoading(true)
@@ -174,6 +179,7 @@ export default function App() {
   const clearFilters = () => {
     setFilters({ status: '', priority: '', start: '', end: '' })
     fetchTodos()
+    setListResetKey((k) => k + 1)
   }
 
   return (
@@ -181,9 +187,12 @@ export default function App() {
       {/* Üst başlık alanı */}
       <header className="header">
         <div className="header-inner" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-          <div>
-            <h1>To-Do Projesi</h1>
-            <p className="subtitle">Unutmamanız gereken her şeyi not alın !!</p>
+          <div className="brand">
+            <div className="logo-badge" aria-hidden>✓</div>
+            <div>
+              <h1 className="site-title">To-Do Projesi</h1>
+              <p className="subtitle">Unutmamanız gereken her şeyi not alın !!</p>
+            </div>
           </div>
           <div className="user-menu">
             <button className="user-menu-button" onClick={() => setMenuOpen((v) => !v)}>
@@ -206,10 +215,10 @@ export default function App() {
       <main className="container">
         {/* Sol sütun: TodoForm kartı */}
         <section className="card">
-          <h2>{editingTodo ? 'Todo Güncelle' : 'Yeni Todo Ekle'}</h2>
+          <h2 className="section-title">Yeni Todo Ekle</h2>
           {/* Form: yeni kayıt ve düzenleme işlemleri */}
           <TodoForm
-            editingTodo={editingTodo}
+            editingTodo={null}
             onCreate={handleCreate}
             onUpdate={handleUpdate}
             onCancelEdit={handleCancelEdit}
@@ -220,7 +229,7 @@ export default function App() {
         <section className="card">
           <div className="card-header" style={{ alignItems: 'end' }}>
             <div>
-              <h2>Tüm Todolar</h2>
+              <h2 className="section-title">Tüm Todolar</h2>
             </div>
             <div className="card-tools" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               <select name="status" value={filters.status} onChange={handleFilterChange} className="btn btn-outline" style={{ paddingRight: 28 }}>
@@ -246,6 +255,7 @@ export default function App() {
 
           {/* Todo listesi */}
           <TodoList
+            key={listResetKey}
             todos={todos}
             onEdit={setEditingTodo}
             onToggleStatus={handleToggleStatus}
@@ -253,6 +263,26 @@ export default function App() {
           />
         </section>
       </main>
+
+      {/* Düzenleme için modal (arka plan blur) */}
+      {editingTodo && (
+        <div className="modal-backdrop" onClick={() => setEditingTodo(null)}>
+          <div className="modal-dialog" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
+            <section className="card">
+              <div className="card-header">
+                <h2 className="section-title" style={{ marginBottom: 0 }}>Todo Düzenle</h2>
+                <button className="btn btn-outline modal-close" onClick={() => setEditingTodo(null)} aria-label="Kapat">✕</button>
+              </div>
+              <TodoForm
+                editingTodo={editingTodo}
+                onCreate={handleCreate}
+                onUpdate={handleUpdate}
+                onCancelEdit={handleCancelEdit}
+              />
+            </section>
+          </div>
+        </div>
+      )}
 
       {/* Alt bilgi */}
       {/* Hava durumu test bileşeni: tüm satırı kaplar */}

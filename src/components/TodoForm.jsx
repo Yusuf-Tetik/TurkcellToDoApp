@@ -89,7 +89,7 @@ export default function TodoForm({ editingTodo, onCreate, onUpdate, onCancelEdit
         <input
           id="title"
           type="text"
-          placeholder="Örn: Turkcell'de işe gir"
+          placeholder="Örn: Turkcell"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           required
@@ -101,7 +101,7 @@ export default function TodoForm({ editingTodo, onCreate, onUpdate, onCancelEdit
         <label htmlFor="description">Açıklama</label>
         <textarea
           id="description"
-          placeholder=""
+          placeholder="Örn: Turkcell'de işe gir"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={3}
@@ -113,10 +113,26 @@ export default function TodoForm({ editingTodo, onCreate, onUpdate, onCancelEdit
       <div className="form-group inline">
         <div className="form-group" style={{ flex: 1 }}>
           <label htmlFor="status">Durum</label>
-          <select id="status" value={status} onChange={(e) => setStatus(e.target.value)}>
-            <option value="NOT_DONE">Not Done</option>
-            <option value="DONE">Done</option>
-          </select>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <button
+              type="button"
+              className={status === 'NOT_DONE' ? 'btn btn-secondary' : 'btn btn-outline'}
+              onClick={() => setStatus('NOT_DONE')}
+              aria-pressed={status === 'NOT_DONE'}
+              title="Not Done"
+            >
+              ✗ Not Done
+            </button>
+            <button
+              type="button"
+              className={status === 'DONE' ? 'btn btn-secondary' : 'btn btn-outline'}
+              onClick={() => setStatus('DONE')}
+              aria-pressed={status === 'DONE'}
+              title="Done"
+            >
+              ✓ Done
+            </button>
+          </div>
         </div>
         <div className="form-group" style={{ flex: 1 }}>
           <label htmlFor="priority">Öncelik</label>
@@ -136,16 +152,17 @@ export default function TodoForm({ editingTodo, onCreate, onUpdate, onCancelEdit
           type="datetime-local"
           value={deadline}
           onChange={(e) => setDeadline(e.target.value)}
+          required
         />
       </div>
 
       {/* Etiketler */}
       <div className="form-group">
-        <label htmlFor="tags">Etiketler (virgül ile ayırın)</label>
+        <label htmlFor="tags">Etiketler</label>
         <input
           id="tags"
           type="text"
-          placeholder="ör: iş, önemli"
+          placeholder="Örn: iş, önemli"
           value={tags}
           onChange={(e) => setTags(e.target.value)}
         />

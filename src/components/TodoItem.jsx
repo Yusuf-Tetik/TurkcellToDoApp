@@ -28,8 +28,12 @@ export default function TodoItem({ todo, onEdit, onToggleStatus, onDelete }) {
       <td>{todo.title}</td>
       <td className="muted">{todo.description}</td>
       <td>
-        <span className={isCompleted ? 'badge badge-success' : 'badge badge-warning'}>
-          {isCompleted ? 'Done' : 'Not Done'}
+        <span
+          className={isCompleted ? 'badge badge-success' : 'badge badge-warning'}
+          aria-label={isCompleted ? 'Done' : 'Not Done'}
+          title={isCompleted ? 'Done' : 'Not Done'}
+        >
+          {isCompleted ? '✓' : '✗'}
         </span>
       </td>
       <td>{priority}</td>

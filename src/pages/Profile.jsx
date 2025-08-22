@@ -24,7 +24,16 @@ export default function Profile() {
     )
   }
 
-  const displayName = user?.name || user?.fullName || user?.username || '-'
+  let displayName = user?.name || user?.fullName || user?.username || '-'
+  try {
+    if (!user?.name) {
+      const lastEmail = localStorage.getItem('last_register_email')
+      const lastName = localStorage.getItem('last_register_name')
+      if (lastEmail && lastName && String(user?.email || '') === lastEmail) {
+        displayName = lastName
+      }
+    }
+  } catch {}
 
   return (
     <div className="min-h-screen bg-[#f5f6fa] flex items-center justify-center p-4">
